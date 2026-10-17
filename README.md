@@ -4,8 +4,8 @@ App web simples para festas à fantasia. Os convidados usam o próprio celular,
 pelo QR Code, para **cadastrar a fantasia** na entrada e **votar na melhor** no
 fim da festa. São duas categorias separadas: **Adultos** e **Crianças**.
 
-Feito com Next.js e publicado de graça na Vercel, com um banco Upstash Redis
-(também gratuito) criado pelo próprio painel da Vercel.
+Feito com Next.js e publicado de graça na Vercel, com um banco Redis (plano
+gratuito) criado pelo próprio painel da Vercel.
 
 ---
 
@@ -91,19 +91,20 @@ São 4 etapas e leva uns 15 minutos. Tudo é gratuito.
    - **Value:** uma senha só sua (é a senha do painel `/admin`)
 4. Clique em **Deploy** e espere terminar.
 
-### 3. Criar o banco de dados (Upstash Redis)
+### 3. Criar o banco de dados (Redis)
 
 1. No projeto na Vercel, abra a aba **Storage**.
-2. Clique em **Create Database** (ou **Browse Marketplace**) e escolha
-   **Upstash → Redis**.
-3. Escolha o plano **Free** e a região mais próxima do Brasil (ex.: São Paulo,
-   se aparecer).
+2. Clique em **Create Database** e escolha **Redis** (da Redis Inc.).
+3. Escolha o plano **Free** (30 MB, sobra para a festa).
 4. Conecte o banco ao projeto (**Connect Project**), marcando todos os
    ambientes. Deixe o prefixo das variáveis como está.
-   A Vercel cria sozinha as variáveis do banco (`KV_REST_API_URL` e
-   `KV_REST_API_TOKEN`). Você não precisa copiar nada.
+   A Vercel cria sozinha a variável `REDIS_URL`. Você não precisa copiar nada.
 5. Vá em **Deployments**, clique nos `…` do deploy mais recente e em
    **Redeploy**. Variáveis novas só valem a partir de um novo deploy.
+
+> O app também funciona com o **Upstash for Redis** (variáveis
+> `KV_REST_API_URL` e `KV_REST_API_TOKEN`), mas pela Vercel ele não tem mais
+> plano grátis. Se os dois estiverem conectados, o app usa o Upstash.
 
 ### 4. Testar
 
@@ -122,6 +123,7 @@ automaticamente.
 | Mensagem | O que fazer |
 | --- | --- |
 | "Banco não configurado…" | O Redis não está conectado ou faltou o **Redeploy** (passo 3). |
+| Página de login da Vercel em vez do site | Você abriu o link de uma versão específica (com um código no meio, ex.: `…-106fqxthk-…vercel.app`). Use o endereço principal: `https://NOME-DO-PROJETO.vercel.app`. |
 | "Defina a variável ADMIN_SENHA…" | Crie a variável `ADMIN_SENHA` (passo 2.3) e faça **Redeploy**. |
 
 ---
@@ -130,7 +132,8 @@ automaticamente.
 
 **Antes da festa**
 - [ ] No `/admin`: excluir cadastros de teste, **cadastro aberto**, **votação fechada**.
-- [ ] Abrir `/admin/qrcodes` **no site publicado** (não no localhost) e imprimir.
+- [ ] Abrir `/admin/qrcodes` **no endereço principal do site** (não no localhost
+      nem no link de uma versão específica) e imprimir.
 
 **Na entrada**
 - [ ] Deixar o QR Code "Cadastre sua fantasia!" à vista.
@@ -168,6 +171,7 @@ src/
 └── lib/
     ├── concurso.ts               # ⭐ regras do concurso (cadastro, votos, placar)
     ├── armazem.ts                # banco: Redis na Vercel, memória no computador
+    ├── erros.ts                  # mostra o motivo quando algo falha no servidor
     ├── dispositivo.ts            # identificador do celular
     ├── admin.ts                  # senha do admin
     ├── tipos.ts                  # categorias e limites de texto

@@ -1,10 +1,13 @@
 import { Redis } from "@upstash/redis";
+import { createClient } from "redis";
 
 /**
  * Onde os dados ficam guardados.
  *
- * - Na Vercel: no Upstash Redis criado pela aba "Storage" do projeto. A Vercel
- *   cria sozinha as variáveis KV_REST_API_URL e KV_REST_API_TOKEN.
+ * - Na Vercel: no banco Redis criado pela aba "Storage" do projeto. Funciona
+ *   com o "Redis" da Redis Inc. (variável REDIS_URL, tem plano grátis) e com o
+ *   "Upstash for Redis" (variáveis KV_REST_API_URL e KV_REST_API_TOKEN). A
+ *   Vercel cria essas variáveis sozinha ao conectar o banco.
  * - No seu computador (sem essas variáveis): na memória. Funciona para
  *   testar, mas tudo some quando o servidor reinicia.
  *
@@ -20,6 +23,42 @@ export interface Armazem {
   hdel(chave: string, ...campos: string[]): Promise<void>;
 }
 
+// Redis "comum" (ex.: Redis Inc.), por conexão direta com REDIS_URL.
+function criarRedisTcp(url: string): Armazem {
+  // RESP 2: protocolo aceito por qualquer servidor Redis.
+  const cliente = createClient({ url, RESP: 2 });
+  cliente.on("error", (e) => console.error("Redis:", e));
+
+  // A conexão é aberta uma vez e reaproveitada pelas próximas requisições
+  // (o plano grátis limita quantas conexões podem existir ao mesmo tempo).
+  // Se cair, o próprio cliente reconecta.
+  let conectando: Promise<unknown> | null = null;
+  async function pronto() {
+    if (!cliente.isOpen) {
+      conectando ??= cliente.connect().catch((e) => {
+        conectando = null; // deixa a próxima requisição tentar de novo
+        throw e;
+      });
+      await conectando;
+    }
+    return cliente;
+  }
+
+  return {
+    hget: async (chave, campo) => (await pronto()).hGet(chave, campo),
+    hgetall: async (chave) => (await pronto()).hGetAll(chave),
+    hset: async (chave, campo, valor) => {
+      await (await pronto()).hSet(chave, campo, valor);
+    },
+    hsetnx: async (chave, campo, valor) =>
+      (await (await pronto()).hSetNX(chave, campo, valor)) === 1,
+    hdel: async (chave, ...campos) => {
+      if (campos.length) await (await pronto()).hDel(chave, campos);
+    },
+  };
+}
+
+// Upstash, pela API HTTP (KV_REST_API_URL + KV_REST_API_TOKEN).
 function criarRedis(url: string, token: string): Armazem {
   const redis = new Redis({ url, token });
   return {
@@ -98,11 +137,13 @@ export function armazem(): Armazem {
 
   if (url && token) {
     global.armazem = criarRedis(url, token);
+  } else if (process.env.REDIS_URL) {
+    global.armazem = criarRedisTcp(process.env.REDIS_URL);
   } else if (process.env.VERCEL) {
     // Na Vercel a memória não é compartilhada entre requisições: sem o Redis
     // os cadastros sumiriam. Melhor falhar com uma mensagem clara.
     throw new Error(
-      "Banco não configurado: crie o Upstash Redis na aba Storage do projeto na Vercel e faça um novo deploy.",
+      "Banco não configurado: conecte um banco Redis ao projeto na aba Storage da Vercel e faça um novo deploy.",
     );
   } else {
     console.warn(
