@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --font-festa: var(--font-fredoka), system-ui, sans-serif;
+  --color-tinta: #2e1065;
+  --color-amarelo: #facc15;
+  --color-rosa: #ec4899;
+  --color-roxo: #7c3aed;
+  --color-ciano: #22d3ee;
+}
+
+html {
+  background: #3b0764;
+}
+
+/* Fundo de festa: degradê roxo/rosa com confetes */
+body {
+  min-height: 100dvh;
+  color: white;
+  font-family: var(--font-festa);
+  background-color: #4c1d95;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgb(250 204 21 / 0.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 75% 65%, rgb(255 255 255 / 0.35) 0 2px, transparent 3px),
+    radial-gradient(circle at 45% 85%, rgb(34 211 238 / 0.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 85% 15%, rgb(236 72 153 / 0.6) 0 3px, transparent 4px),
+    linear-gradient(165deg, #3b0764 0%, #6d28d9 45%, #be185d 100%);
+  background-size: 130px 130px, 90px 90px, 160px 160px, 110px 110px, 100% 100%;
+}
+
+/* Classes da festa. Ficam na camada "components" para que os utilitários do
+   Tailwind (ex.: w-auto, text-3xl, p-3) consigam sobrescrevê-las. */
+@layer components {
+  /* Cartão branco */
+  .cartao {
+    border-radius: 1.5rem;
+    background: white;
+    color: var(--color-tinta);
+    padding: 1.25rem;
+    box-shadow: 0 10px 0 rgb(0 0 0 / 0.18);
+  }
+
+  /* Botão grande, fácil de tocar */
+  .botao {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    padding: 0.9rem 1.25rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    background: var(--color-amarelo);
+    color: var(--color-tinta);
+    box-shadow: 0 5px 0 #a16207;
+    transition: transform 80ms, box-shadow 80ms;
+  }
+  .botao:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #a16207;
+  }
+  .botao:disabled {
+    opacity: 0.45;
+  }
+  .botao-secundario {
+    background: white;
+    color: var(--color-tinta);
+    box-shadow: 0 5px 0 #c4b5fd;
+  }
+  .botao-secundario:active:not(:disabled) {
+    box-shadow: 0 1px 0 #c4b5fd;
+  }
+
+  .campo {
+    width: 100%;
+    border-radius: 0.9rem;
+    border: 2px solid #ddd6fe;
+    background: #faf5ff;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    color: var(--color-tinta);
+    outline: none;
+  }
+  .campo:focus {
+    border-color: var(--color-roxo);
+  }
+
+  .titulo {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-shadow: 0 4px 0 rgb(0 0 0 / 0.25);
+  }
+}
+
+@keyframes pulo {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.entrada {
+  animation: pulo 450ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada { animation: none; }
+}
+
+/* Impressão dos QR codes: fundo branco, sem botões, uma folha por código.
+   (@page fica fora do @media print porque o compilador descarta o bloco
+   inteiro se ele estiver dentro; de qualquer forma só vale na impressão.) */
+@page {
+  size: A4;
+  margin: 1.5cm;
+}
+@media print {
+  html,
+  body {
+    background: white !important;
+  }
+  .nao-imprimir {
+    display: none !important;
+  }
+  .folha-qr {
+    box-shadow: none;
+    padding: 0;
+    break-after: page;
+  }
+  .folha-qr:last-child {
+    break-after: auto;
+  }
+}
