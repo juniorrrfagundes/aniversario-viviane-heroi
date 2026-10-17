@@ -24,7 +24,8 @@ export function useDados<T>(url: string, intervaloMs?: number) {
             setDados(r.dados);
             setErro(null);
           } else {
-            setErro("Algo deu errado. Tente de novo.");
+            const { erro } = (r.dados ?? {}) as { erro?: string };
+            setErro(erro ?? "Algo deu errado. Tente de novo.");
           }
         })
         .catch(() => ativo && setErro(ERRO_CONEXAO));

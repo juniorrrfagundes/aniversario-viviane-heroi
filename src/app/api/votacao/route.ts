@@ -6,11 +6,12 @@ import {
   votar,
 } from "@/lib/concurso";
 import { dispositivoDa } from "@/lib/dispositivo";
+import { comTratamento } from "@/lib/erros";
 import { CATEGORIAS, ehCategoria } from "@/lib/tipos";
 
 // Participantes e votos já dados por este celular. Nunca devolve contagem de
 // votos: o resultado só aparece no painel do admin.
-export async function GET(req: NextRequest) {
+export const GET = comTratamento(async (req: NextRequest) => {
   const dispositivo = dispositivoDa(req);
   const [fases, votos] = await Promise.all([
     lerFases(),
@@ -25,9 +26,9 @@ export async function GET(req: NextRequest) {
     participantes,
     meusVotos: votos,
   });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = comTratamento(async (req: NextRequest) => {
   const dispositivo = dispositivoDa(req);
   const corpo = await req.json().catch(() => null);
   const categoria = corpo?.categoria;
@@ -58,4 +59,4 @@ export async function POST(req: NextRequest) {
         404,
       );
   }
-}
+});

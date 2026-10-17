@@ -1,19 +1,20 @@
 import type { NextRequest } from "next/server";
 import { cadastrar, lerFases, meusCadastros } from "@/lib/concurso";
 import { dispositivoDa } from "@/lib/dispositivo";
+import { comTratamento } from "@/lib/erros";
 import { ehCategoria, FANTASIA_MAX, NOME_MAX } from "@/lib/tipos";
 
 // Situação do cadastro para este celular.
-export async function GET(req: NextRequest) {
+export const GET = comTratamento(async (req: NextRequest) => {
   const dispositivo = dispositivoDa(req);
   const [fases, meus] = await Promise.all([
     lerFases(),
     meusCadastros(dispositivo.id),
   ]);
   return dispositivo.responder({ cadastroAberto: fases.cadastro, meus });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = comTratamento(async (req: NextRequest) => {
   const dispositivo = dispositivoDa(req);
   const corpo = await req.json().catch(() => null);
 
@@ -54,4 +55,4 @@ export async function POST(req: NextRequest) {
     );
   }
   return dispositivo.responder({ participante }, 201);
-}
+});
